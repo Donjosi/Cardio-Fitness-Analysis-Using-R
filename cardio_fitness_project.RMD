@@ -1,0 +1,562 @@
+---
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+##==========================================================================
+## Week 4: Project 1 Cardio Fitness 
+
+## Ameh Alogwu
+##==========================================================================
+## Environment Setup and working Directory
+## Set working directory #
+
+setwd("C:/Users/amehj/Documents/MyGreatLearning/1.4 - Cardio Fitness Project/")
+
+getwd()
+
+## Import and load all packages##
+install.packages("dplyr")
+install.packages("readxl")
+install.packages("readr")
+install.packages("rpivotTable")
+install.packages("tidycomm")
+install.packages("tidyr")
+install.packages("pander")
+install.packages("egg")
+install.packages("packHV")
+install.packages("cowplot")
+install.packages("corrplot")
+install.packages("corrr")
+install.packages("backports")
+install.packages("tidyverse")
+install.packages("fs")
+install.packages("Hmisc")
+install.packages("glmm")
+install.packages("PerformanceAnalytics")
+
+
+
+## Run packages#
+
+library(readxl)
+library(dplyr)
+library(rpivotTable)
+library(readr)
+library(pander)
+library(tidyr)
+library(ggplot2)
+library(scales)
+library(egg)
+library(grid)
+library(packHV)
+library(lubridate)
+library(cowplot)
+library(corrplot)
+library(corrr)
+library(tidyverse)
+library(Hmisc)
+library(glmm)
+library(mltools)
+library(PerformanceAnalytics)
+
+
+
+options(scipen = 999)
+
+
+cardio_fitness_p = read_csv("CardioGoodFitness.csv")
+
+# # Convert all character columns to factor using dplyr#
+
+cardio_fitness_p <- mutate_if(cardio_fitness_p, is.character, as.factor)
+
+
+## Variable Identification - Inferences ##
+
+## use r functions to perform view summary of the data#
+
+dim(cardio_fitness_p)
+names(cardio_fitness_p)
+str(cardio_fitness_p)
+head(cardio_fitness_p)
+tail(cardio_fitness_p)
+summary(cardio_fitness_p)
+glimpse(cardio_fitness_p)
+
+
+
+## Univariate Analysis #
+
+## Univariate Analysis will be on the quantitative data observed in the set
+
+
+## Create a subset of the data, select some continuous variables#
+
+
+cardiosubet <- cardio_fitness_p[, c("Age", "Education", "Usage", "Income", "Miles", "Fitness")]
+
+
+##  Organize each variable into a table showing a  
+## visual summary of the selected variables 
+  
+cardiosubet %>%
+  summarise(Variables = names(cardiosubet),
+            Mean = sapply(cardiosubet,mean),
+            Median = sapply(cardiosubet, median),
+            Min = sapply(cardiosubet, min),
+            Max = sapply(cardiosubet, max)) %>%
+            
+  pander()
+
+cdt <- cardiosubet %>%
+  summarise(Variables = names(cardiosubet),
+            Mean = sapply(cardiosubet,mean),
+            Median = sapply(cardiosubet, median),
+            Min = sapply(cardiosubet, min),
+            Max = sapply(cardiosubet, max))
+            
+           
+write.csv(cdt, "output.csv")
+
+## Check the spread of the data in a tabular form
+
+cardiosubet %>%
+  summarise(Variables = names(cardiosubet),
+            IQR = sapply(cardiosubet, IQR),
+            Q1 = sapply(cardiosubet, quantile, 0.25),
+            Q3 = sapply(cardiosubet, quantile, 0.75),
+            "Outlier-Q1" = (Q1-1.5*IQR),
+            "outlier-Q3" = (Q3+1.5*IQR),
+            Std_Dev = sapply(cardiosubet,sd)) %>%
+  pander()
+
+cdt2 <- cardiosubet %>%
+  summarise(Variables = names(cardiosubet),
+            IQR = sapply(cardiosubet, IQR),
+            Q1 = sapply(cardiosubet, quantile, 0.25),
+            Q3 = sapply(cardiosubet, quantile, 0.75),
+            "Outlier-Q1" = (Q1-1.5*IQR),
+            "outlier-Q3" = (Q3+1.5*IQR),
+            Std_Dev = sapply(cardiosubet,sd)) 
+
+write.csv(cdt2, "cdt2.csv")
+
+## create a frequency table for each variable##
+cardiosubet %>%
+  group_by("Age of Customers" = cardiosubet$Age) %>%
+  summarise(freq = n()) %>%
+  pander()
+
+cardiosubet %>%
+  group_by("Education In year" = cardiosubet$Education) %>%
+  summarise(freq = n()) %>%
+  pander()
+
+cardiosubet %>%
+  group_by("Usage per Wk" = cardiosubet$Usage) %>%
+  summarise(freq = n()) %>%
+  pander()
+
+cardiosubet %>%
+  group_by("Income" = cardiosubet$Income) %>%
+  summarise(freq = n()) %>%
+  pander()
+
+cardiosubet %>%
+  group_by("Distance in Miles" = cardiosubet$Miles) %>%
+  summarise(freq = n()) %>%
+  pander()
+
+
+cardiosubet %>%
+  group_by("Self rated fitness score" = cardiosubet$Fitness) %>%
+  summarise(freq = n()) %>%
+  pander()
+
+
+
+## Create a data visualization
+
+## Plot Histogram and Boxplot below for all the different observations selected.
+
+## Histogram and Boxplot on Age
+
+Plot1a <- ggplot(cardiosubet, aes(x = Age)) + 
+  geom_histogram(binwidth = 1, color = "black",fill = "blue") + 
+  labs(y = "Freqeuncy") + ggtitle("Customer Age", "Histogram")
+
+Plot1b <- ggplot(cardiosubet, aes(x = "", y = Age)) + 
+  geom_boxplot(color = "black", fill = "purple") + 
+  coord_flip() +
+  labs(x = "Frequency") + ggtitle("", "Box Plot") 
+
+# Combine both plots together using egg function#
+
+egg::ggarrange(Plot1a, Plot1b, heights = 2:1)
+
+## Histogram and Boxplot on Education
+
+Plot2a <- ggplot(cardiosubet, aes(x = Education)) + 
+  geom_histogram(binwidth = 1, color = "black",fill = "blue") + 
+  labs(y = "Frequency") + ggtitle("Education", "Histogram")
+
+Plot2b <- ggplot(cardiosubet, aes(x = "", y = Education)) + 
+  geom_boxplot(color = "black", fill = "purple") + 
+  coord_flip() +
+  labs(x = "Frequency") + ggtitle("", "Box plot") 
+egg::ggarrange(Plot2a, Plot2b, heights = 2:1)
+
+
+## Histogram and Boxplot on Usage
+
+Plot3a <- ggplot(cardiosubet, aes(x = Usage)) + 
+  geom_histogram(binwidth = 1, color = "black",fill = "blue") + 
+  labs(y = "Frequency") + ggtitle("Usage", "Histogram")
+
+Plot3b <- ggplot(cardiosubet, aes(x = "", y = Usage)) + 
+  geom_boxplot(color = "black", fill = "purple") + 
+  coord_flip() +
+  labs(x = "Frequency") + ggtitle("", "Box plot") 
+egg::ggarrange(Plot3a, Plot3b, heights = 2:1)
+
+
+## Histogram and Boxplot on Income#
+
+Plot4a <- ggplot(cardiosubet, aes(x = Income)) + 
+  geom_histogram(color = "black",fill = "blue") + 
+  labs(y = "Frequency") + ggtitle("Income", "Histogram")
+
+PLot4b <- ggplot(cardiosubet, aes(x = "", y = Income)) + 
+  geom_boxplot(color = "black", fill = "purple") + 
+  coord_flip() +
+  labs(x = "Frequency") + ggtitle("", "Box plot") 
+egg::ggarrange(Plot4a, PLot4b, heights = 2:1)
+
+
+## Histogram and Boxplot Miles##
+
+Plot5a <- ggplot(cardiosubet, aes(x = Miles)) + 
+  geom_histogram(color = "black",fill = "blue") + 
+  labs(y = "Frequency") + ggtitle("Miles", "Histogram")
+
+Plot5b <- ggplot(cardiosubet, aes(x = "", y = Miles)) + 
+  geom_boxplot(color = "black", fill = "purple") + 
+  coord_flip() +
+  labs(x = "Frequency") + ggtitle("", "Box Plot") 
+egg::ggarrange(Plot5a, Plot5b, heights = 2:1)
+
+
+## Histogram and Boxplot Fitness##
+
+Plot6a <- ggplot(cardiosubet, aes(x = Fitness)) + 
+  geom_histogram(color = "black",fill = "blue", binwidth = 0.5) + 
+  labs(y = "Frequency") + ggtitle("Fitness", "Histogram")
+
+Plot6b <- ggplot(cardiosubet, aes(x = "", y = Fitness)) + 
+  geom_boxplot(color = "black", fill = "purple") + 
+  coord_flip() +
+  labs(x = "Frequency") + ggtitle("", "Box Plot")
+
+egg::ggarrange(Plot6a, Plot6b, heights = 2:1)
+
+
+
+# Bivariate Analysis
+##  Bivariate Analysis will be performed to establish relationships between 
+## some category observed in the data in other to draw some inference about the data
+## The data was categorized in quantitative and qualitative data
+## First analysis will be on Qualitative data to determine relationships
+
+## compute a correlation matrix using cardio subset data "cardiosubet"
+
+cor.mtx <- correlate(cardiosubet)
+head(cor.mtx)
+
+## Selection was made on variables with a coorelation coefficient value greater than value 0.6
+
+cor.mtx2 <- cor(cardiosubet)
+corrplot(cor.mtx2, method = "number")
+corrplot(cor.mtx2, method = "circle")
+
+## Select variables greater than 0.6
+
+val_over_60 <- function(x) any(x>0.6, na.rm = TRUE)
+
+cor.sel <- cor.mtx %>%
+  focus_if(val_over_60, mirror = TRUE)
+
+cor.sel %>% rplot()
+
+pander(cor.sel)
+sel.corr <- cor.mtx %>%
+  focus(Education, Usage, Income, Fitness, mirror = TRUE)
+write.csv(sel.corr, "correlation_selection.csv")
+
+cor.sel %>%
+  rearrange(method = "MDS", absolute = FALSE) %>%
+  shave() %>%
+  rplot(shape = 15, colours = c("red", "green"))
+
+## The following are the selected variables for the bivariate analysis 
+## 1. Usage vs Miles
+## 2. Fitness vs Miles
+## 3. Education vs Income
+
+## 1. Usage vs Distance
+##Bivariate analysis of a continuous variable with respect to another continuous variable 
+## linear relationship Between Usage and the Distance covered on the treadmill machine
+## Create Data subset 
+
+sctterp1 <- cardio_fitness_p[, c("Usage", "Miles")]
+
+# Create Scatterplot
+
+ggplot(sctterp1, aes(`Miles`, Usage)) +
+  geom_point(aes(color = factor(Usage))) +
+  geom_smooth(method = "lm", se = F, col = "red", size = 1) +
+  labs(title = "Scatterplot",
+       subtitle = "Usage vs Distance in Miles",
+       y="Usage (Ave Times per Wk)",
+       x="Distance in Miles")
+
+
+
+## 2. Fitness vs Miles
+##Bivariate analysis of a continuous variable with respect to another continuous variable 
+## linear relationship between Fitness and the Distance.
+## Create Data subset
+
+sctterp2 <- cardio_fitness_p[, c("Fitness", "Miles")]
+
+## Create scatter plot to check relationship.
+
+ggplot(sctterp2, aes(`Miles`, Fitness)) +
+  geom_point(aes(color = factor(Fitness))) +
+  geom_smooth(method = "lm", se = F, col = "red", size = 1) +
+  labs(title = "Scatterplot",
+       subtitle = "Fitness vs Distance in Miles",
+       y="Fitness (Rate Score)",
+       x="Distance in Miles")
+
+# 3. Education vs Income
+##Bivariate analysis of a continuous variable with respect to another continuous variable 
+## linear relationship between Fitness and the Distance.
+## Create Data subset
+
+sctterp3 <- cardio_fitness_p[, c("Education", "Income")]
+
+## Create scatter plot to check relationship.
+
+ggplot(sctterp3, aes(`Income`, Education)) +
+  geom_point(aes(color = factor(Education))) +
+  geom_smooth(method = "lm", se = F, col = "red", size = 1) +
+  labs(title = "Scatterplot",
+       subtitle = "Education vs Income",
+       y="Education",
+       x="Amount")
+
+
+
+# 4. Fitness vs Usage
+##Bivariate analysis of a continuous variable with respect to another continuous variable 
+## linear relationship between Fitness and the Distance.
+## Create Data subset
+
+sctterp4 <- cardio_fitness_p[, c("Fitness", "Usage")]
+
+## Create scatter plot to check relationship.
+
+ggplot(sctterp4, aes(`Fitness`, Usage)) +
+  geom_point(aes(color = factor(Usage))) +
+  geom_smooth(method = "lm", se = F, col = "red", size = 1) +
+  labs(title = "Scatterplot",
+       subtitle = "Fitness vs Usage",
+       y="Usage per wk",
+       x="Fitness Score")
+
+
+
+##Qualitative Data
+
+## To deal with categorical variables in the dataset
+## Create a new data subset
+
+
+cardio_new <- cardio_fitness_p
+
+# Assign values to the diffrent data levels to make the numeric
+levels(cardio_new$Product) <- c(1,2,3)
+levels(cardio_new$Gender) <- c(1,2)
+levels(cardio_new$MaritalStatus) <- c(1,2)
+
+
+## Use rcorr function to create a correlation matrix table with the new created datasubset using 
+
+
+corr.pdt <- rcorr(as.matrix(cardio_new))
+
+mydata.coeff = corr.pdt$r
+mydata.p = corr.pdt$P
+mydata.coeff
+corrplot(mydata.coeff)
+corrplot(mydata.coeff, method = "number")
+
+
+
+## Use chart.Correlation(): Draw scatter plots
+
+
+chart.Correlation(mydata.coeff, histogram = TRUE, pch = 20)
+
+## Select variables greater than 0.6
+
+val_over_60 <- function(x) any(x>0.6, na.rm = TRUE)
+
+mydata.sel <- mydata.coeff %>%
+  focus_if(val_over_60, mirror = TRUE)
+
+mydata.sel %>% rplot()
+
+
+pander(mydata.sel)
+write.csv(mydata.sel, "correlation_selection.csv")
+
+## check correlation using different types of plot of selected variables
+
+
+## 1. Product vs Income
+##Bivariate analysis of a continuous variable with respect to a categorical variable
+## Create Data subset
+
+trdmil <- cardio_fitness_p[, c("Product", "Income")]
+trdmil$Qty <- 1
+trdmil$Inc.Range <- cut(trdmil$Income, c(20000, 40000, 60000, 80000, max(trdmil$Income)), 
+                        labels = c("Below 40k", "40 - 60k", "60 - 80k", "80-100k"))
+
+pander(trdmil %>%
+  group_by(Inc.Range) %>%
+  summarise(Qty=sum(Qty, na.rm = TRUE)))
+
+trdmil2 <- trdmil %>%
+  group_by(Inc.Range) %>%
+  summarise(Qty=sum(Qty, na.rm = TRUE))
+
+write.csv(trdmil2, "treadmil Qty.csv")
+  
+## Create Barchart
+trdmil %>%
+  ggplot(aes(Inc.Range)) +
+  geom_bar(aes(fill = Inc.Range))+
+  ggtitle("Bivariate Analysis", "Income and Product")+
+  xlab("Income Range") + ylab("Quantity") +
+  facet_grid(~Product) +
+
+
+
+
+## 2. Gender vs Miles  
+##Bivariate analysis of a continuous variable with respect to a categorical variable
+## Create Data subset 
+
+gdmiles <- cardio_fitness_p[, c("Gender", "Miles")]
+
+GndMiles <- gdmiles %>%
+  group_by(Gender) %>%
+  summarise("Total Dist (Miles)" = sum(Miles, na.rm = TRUE), "Ave Dist (Miles)" = mean(Miles, na.rm = TRUE)) 
+
+pander(GndMiles)
+
+## Create Barchart to view relationship
+
+GndMiles2 <- tidyr::pivot_longer(GndMiles, cols = c("Total Dist (Miles)", "Ave Dist (Miles)"), names_to = 'variable',
+                                 values_to = 'value')
+
+ggplot(GndMiles2, aes(x=`Gender`, y=value, fill = Gender)) +
+  geom_bar(stat = 'identity', position = 'dodge')
+  
+
+
+g <- gdmiles %>%
+  group_by(Gender)%>%
+  summarise("Distance" = sum(Miles, na.rm = TRUE))
+  
+ggplot(g, aes(x=`Gender`, y= `Distance`, fill = Gender)) +
+  geom_bar(stat = 'identity', position = 'dodge') +
+  ggtitle("Bivariate Analysis of Gender & Distance", "Gender vs Miles")+
+  ylab("Distance in Miles")
+
+table(cardio_fitness_p$Gender)
+
+
+
+## 3. Marital Status vs Income
+##Bivariate analysis of a continuous variable with respect to a categorical variable
+## Create Data subset
+
+MstatInc <- cardio_fitness_p[, c("MaritalStatus", "Income")]
+MstatInc$Nos <- 1
+MstatInc$Inc.Range <- cut(MstatInc$Income, c(20000, 40000, 60000, 80000, max(trdmil$Income)), 
+                        labels = c("Below 40k", "40 - 60k", "60 - 80k", "80-100k"))
+
+
+
+
+MstatInc2 <-  MstatInc %>%
+  group_by(Inc.Range) %>%
+  summarise(TotalNos=sum(Nos, na.rm = TRUE), Partnered=sum(MaritalStatus=="Partnered"), 
+            Single = sum(MaritalStatus=="Single"))
+
+pander(MstatInc2)
+
+
+## Create Barchart
+MstatInc %>%
+  ggplot(aes(Inc.Range)) +
+  geom_bar(aes(fill = Inc.Range))+
+  ggtitle("Bivariate Analysis", "Income Level Partnered vs Single")+
+  xlab("Income Range") + ylab("Nos") +
+  facet_grid(~MaritalStatus)
+
+
+## Marital Status vs Product
+
+MStrdmil <- cbind(MstatInc, "Product" = cardio_fitness_p$Product)
+
+MStrdmil %>%
+  ggplot(aes(MaritalStatus)) +
+  geom_bar(aes(fill = MaritalStatus))+
+  ggtitle("Bivariate Analysis", "Marital Status vs Product")+
+  xlab("Marital Status") + ylab("Nos") +
+  facet_grid(~Product)  
+
+
+## New customers to target
+
+##Age Below 20 and Above 35
+
+##========================================================================
+
+## THE End
+
+##========================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
